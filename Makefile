@@ -1,8 +1,8 @@
 CXX=g++
-TARGET= grfn
+TARGET= grf
 
 PNG_LIB = -L/usr/lib/x86_64-linux-gnu -lpng
-CXXFLAGS=-std=c++11
+CXXFLAGS=-Ofast -std=c++11
 
 all: $(TARGET)
 
@@ -11,7 +11,7 @@ grf: grf.o utils.o
 	$(CXX) -o $@ $^ $(PNG_LIB) $(CXXFLAGS)
 
 grfn: grfn.o utils.o
-	$(CXX) -o $@ $^ $(PNG_LIB) $(CXXFLAGS)    ## -pg
+	$(CXX) -o $@ $^ $(PNG_LIB) $(CXXFLAGS) -pg
 
 
 nsys:
@@ -30,6 +30,6 @@ clean:
 .SUFFIXES : .cpp .o
 
 .cpp.o:
-	$(CXX) $(CFLAGS) $(OPT) $(INCLUDE) $< -c -o $@ $(DEBUG)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $< -c -o $@ $(DEBUG)
 
 
