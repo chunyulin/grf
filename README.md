@@ -8,7 +8,11 @@ Sample C code for blurring images using Gaussian filtering.
 - `png++`, C++ hpp wrapper. On F1, you can [download from here](https://www.nongnu.org/pngpp/) and extract into the project folder.
 
 ### Compile
-`$ make grf`
+```
+$ git clone https://github.com/chunyulin/grf`
+$ cd grf
+$ make grf
+```
 
 ### Run
 `$ ./grf`
