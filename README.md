@@ -9,7 +9,7 @@ Sample C code for blurring images using Gaussian filtering.
 
 ### Compile
 ```
-$ git clone https://github.com/chunyulin/grf`
+$ git clone https://github.com/chunyulin/grf
 $ cd grf
 $ make grf
 ```
