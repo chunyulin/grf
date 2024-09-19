@@ -2,7 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
-#include <png++/png.hpp>
+#include "png++/png.hpp"
 
 #include <iostream>
 #include <vector>
@@ -20,6 +20,7 @@ typedef vector<Array>  Matrix;
 typedef vector<Matrix> Image;
 
 const int CHANNEL = 3;
+const int ITER=5;
 
 
 
@@ -126,11 +127,13 @@ Image applyFilter(Image &image, Matrix &filter){
 */
 
 
-    for (d=0 ; d<3 ; d++)
-    for (i=kh/2 ; i<newImageHeight-(kh-1-kh/2); i++)
-    for (j=kw/2 ; j<newImageWidth -(kw-1-kw/2); j++)
-    for (h=0 ; h<kh ; h++)
-    for (w=0 ; w<kw ; w++) {
+    for (d=0 ; d<3 ; ++d)
+    #pragma omp parallel for collapse(2)
+    for (i=kh/2 ; i<newImageHeight-(kh-1-kh/2); ++i)
+    for (j=kw/2 ; j<newImageWidth -(kw-1-kw/2); ++j)
+    #pragma omp simd
+    for (h=0 ; h<kh ; ++h)
+    for (w=0 ; w<kw ; ++w) {
         newImage[d][i][j] += filter[h][w]*image[d][i-kh/2+h][j-kw/2+w];
     }
 
@@ -175,25 +178,27 @@ void blurPhoto()
     }
 }
 
-void blurNoise()
+const int KS=7;
+void blurNoise(int NW, int NH)
 {
     utils::reset_timer();
-    Matrix filter = getGaussian(7, 7, 3.0);
+    Matrix filter = getGaussian(KS, KS, 3.0);
     printf("Build kernel in %f ms\n", utils::msecs_since());
 
     utils::reset_timer();
-    Image image = genNoise(1000,600);
+    Image image = genNoise(NW, NH);
     printf("Gen noisy image in %f ms\n", utils::msecs_since());
     saveImage(image, "run/n0.png");
 
-    int iter=20;
+    int iter=ITER;
     for (int i=1;i<=iter;++i) {
 
       utils::reset_timer();
       Image newimage = applyFilter(image, filter);
-      std::cout << "Apply filter in " << utils::msecs_since() << " ms\n";
+      float tall = utils::msecs_since();
+      std::cout << "Apply filter in " << tall << " ms. Time per grid: " << tall/((NW-KS/2)*(NH-KS/2))*1e6 << " ns\n";
 
-      if (i%5==0) {
+      if (i%335==0) {
        string fn("run/n" + std::to_string(i) + ".png");
        utils::reset_timer();
        saveImage(newimage, fn.c_str());
@@ -206,9 +211,15 @@ void blurNoise()
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
-    blurPhoto();
-    blurNoise();
+    int NW=1600, NH=900;
+    if (argc==3) {
+       NW=atoi(argv[1]);
+       NH=atoi(argv[2]);
+    }
+
+    //blurPhoto();
+    blurNoise(NW, NH);
     return 0;
 }

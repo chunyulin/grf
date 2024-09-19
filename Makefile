@@ -1,28 +1,28 @@
-CXX=g++
-TARGET= grf
+CXX=icpx
+TARGET=grf
 
-PNG_LIB = -L/usr/lib/x86_64-linux-gnu -lpng
-CXXFLAGS=-Ofast -std=c++11
+LIB = -L/usr/lib/x86_64-linux-gnu -lpng
+CXXFLAGS=-O2 -pg --std=c++11
+
+COMMON=--std=c++11 -pg
+##-march=sapphirerapids -qopenmp
+##-march=native|sapphirerapids
 
 all: $(TARGET)
 
+testO: grf.cpp utils.cpp
+	$(CXX) -O0    -o grfO0 $^ $(LIB)  $(COMMON)
+	$(CXX) -O1    -o grfO1 $^ $(LIB)  $(COMMON)
+	$(CXX) -O2    -o grfO2 $^ $(LIB)  $(COMMON)
+	$(CXX) -O3    -o grfO3 $^ $(LIB)  $(COMMON)
+	$(CXX) -Ofast -o grfOf $^ $(LIB)  $(COMMON)
 
-grf: grf.o utils.o
-	$(CXX) -o $@ $^ $(PNG_LIB) $(CXXFLAGS)
-
-grfn: grfn.o utils.o
-	$(CXX) -o $@ $^ $(PNG_LIB) $(CXXFLAGS) -pg
+verbose:
+	g++ -O3    -o grf grf.cpp utils.cpp $(LIB) -pg --std=c++11 -ftree-vectorizer-verbose=n
 
 
-nsys:
-	export CUDA_VISIBLE_DEVICES=0; \
-           ${NSYS} profile -o nuosc -f true -t cuda,nvtx \
-           ./nuosc --ipt 0 --pmo 1e-5 --mu 1 --ko 1e-3 --zmax 1024 --dz 0.05 --nv 400 --cfl 0.5 --alpha 0.9 --eps0 1e-1 --sigma 2 \
-              --ANA_EVERY 999 --DUMP_EVERY 999 --END_STEP 10
-ncu:
-	${NCU} --nvtx -f --set full --sampling-interval 6 -o FD \
-           ./nuosc --ipt 0 --mu 1.0 --zmax 1024 --dz 0.05 --nv 400 --cfl 0.5 --ko 1e-3 --ANA_EVERY 9999 --DUMP_EVERY 9999 --END_STEP 5
-
+grf: grf.cpp utils.cpp
+	$(CXX) -o $@ $^ $(LIB) $(CXXFLAGS)
 
 clean:
 	rm *.o -f ${TARGET}
@@ -30,6 +30,6 @@ clean:
 .SUFFIXES : .cpp .o
 
 .cpp.o:
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $< -c -o $@ $(DEBUG)
+	$(CXX) $(CXXFLAGS) $< -c -o $@ $(DEBUG)
 
 
